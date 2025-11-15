@@ -45,9 +45,11 @@ const App: React.FC = () => {
   const [challenge, setChallenge] = useState<string>('');
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [battleTeamSize, setBattleTeamSize] = useState<number>(1);
+  const [battleNumGroups, setBattleNumGroups] = useState<number>(2);
   const [battleAgeGroups, setBattleAgeGroups] = useState<AgeGroup[]>(['child', 'yong child', 'yong adult', 'adult', 'senior', 'infant']);
   const [team1, setTeam1] = useState<Person[]>([]);
   const [team2, setTeam2] = useState<Person[]>([]);
+  const [team3, setTeam3] = useState<Person[]>([]);
   
   const allChallenges = [
     'شد الحبل',
@@ -284,13 +286,14 @@ const App: React.FC = () => {
     // Filter people by selected age groups
     const filteredPeople = people.filter(p => battleAgeGroups.includes(p.ageGroup));
     
-    if (filteredPeople.length < battleTeamSize * 2) return;
+    if (filteredPeople.length < battleTeamSize * battleNumGroups) return;
     
     // Reset everything first to restart animation
     setPlayer1(null);
     setPlayer2(null);
     setTeam1([]);
     setTeam2([]);
+    setTeam3([]);
     setChallenge('');
     setIsAnimating(true);
     
@@ -298,6 +301,7 @@ const App: React.FC = () => {
     const shuffled = [...filteredPeople].sort(() => Math.random() - 0.5);
     const selectedTeam1 = shuffled.slice(0, battleTeamSize);
     const selectedTeam2 = shuffled.slice(battleTeamSize, battleTeamSize * 2);
+    const selectedTeam3 = battleNumGroups === 3 ? shuffled.slice(battleTeamSize * 2, battleTeamSize * 3) : [];
     const randomChallenge = selectedChallenges[Math.floor(Math.random() * selectedChallenges.length)];
     
     // For backward compatibility, set player1 and player2 for single-player mode
@@ -309,6 +313,16 @@ const App: React.FC = () => {
       setTimeout(() => {
         setPlayer2(selectedTeam2[0]);
       }, 600);
+      
+      if (battleNumGroups === 3) {
+        setTimeout(() => {
+          setPlayer1(null);
+          setPlayer2(null);
+          setTeam1(selectedTeam1);
+          setTeam2(selectedTeam2);
+          setTeam3(selectedTeam3);
+        }, 300);
+      }
     } else {
       // Team mode
       setTimeout(() => {
@@ -318,12 +332,18 @@ const App: React.FC = () => {
       setTimeout(() => {
         setTeam2(selectedTeam2);
       }, 600);
+      
+      if (battleNumGroups === 3) {
+        setTimeout(() => {
+          setTeam3(selectedTeam3);
+        }, 900);
+      }
     }
     
     setTimeout(() => {
       setChallenge(randomChallenge);
       setIsAnimating(false);
-    }, 1200);
+    }, battleNumGroups === 3 ? 1500 : 1200);
   };
 
   const toggleBattleAgeGroup = (ag: AgeGroup): void => {
@@ -749,6 +769,18 @@ const App: React.FC = () => {
             <div className="battle-config">
               <div className="config-row">
                 <div className="config-item">
+                  <label>Number of Groups:</label>
+                  <select
+                    value={battleNumGroups}
+                    onChange={(e) => setBattleNumGroups(parseInt(e.target.value))}
+                    className="team-size-input"
+                  >
+                    <option value={2}>2 Groups</option>
+                    <option value={3}>3 Groups</option>
+                  </select>
+                </div>
+
+                <div className="config-item">
                   <label>Team Size:</label>
                   <input
                     type="number"
@@ -805,7 +837,7 @@ const App: React.FC = () => {
                 onClick={randomizeBattle} 
                 className="btn btn-randomize"
                 disabled={
-                  people.filter(p => battleAgeGroups.includes(p.ageGroup)).length < battleTeamSize * 2 || 
+                  people.filter(p => battleAgeGroups.includes(p.ageGroup)).length < battleTeamSize * battleNumGroups || 
                   isAnimating || 
                   selectedChallenges.length === 0
                 }
@@ -866,6 +898,28 @@ const App: React.FC = () => {
                       </div>
                     )}
                   </div>
+
+                  {battleNumGroups === 3 && (
+                    <>
+                      <div className={`battle-vs ${challenge ? 'show' : ''}`}>
+                        VS
+                      </div>
+
+                      <div className={`battle-team ${team3.length > 0 ? 'show' : ''}`}>
+                        <div className="team-members">
+                          <div className="team-label">Team 3</div>
+                          {team3.map((member, idx) => (
+                            <div key={member.id} className="team-member">
+                              <span className="member-name">{member.name}</span>
+                              <span className={`age-badge ${member.ageGroup}`}>
+                                {capitalizeAgeGroup(member.ageGroup)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {challenge && (
