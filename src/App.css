@@ -6,6 +6,68 @@
   padding: 20px;
 }
 
+/* Password Screen */
+.password-screen {
+  text-align: center;
+  padding: 60px 40px;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.password-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 400px;
+  margin-top: 30px;
+}
+
+.password-input {
+  padding: 15px 20px;
+  font-size: 1.2rem;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  text-align: center;
+  transition: border-color 0.3s;
+}
+
+.password-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.btn-login {
+  padding: 15px 40px;
+  font-size: 1.2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-login:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+}
+
+.password-error {
+  color: #e74c3c;
+  font-size: 1rem;
+  margin-top: 15px;
+  padding: 12px 20px;
+  background: #ffe6e6;
+  border-radius: 8px;
+  border-left: 4px solid #e74c3c;
+}
+
 .container {
   max-width: 1200px;
   width: 100%;
@@ -46,6 +108,18 @@ h3 {
   padding: 25px;
   background: #f8f9fa;
   border-radius: 12px;
+}
+
+.input-section h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: color 0.2s;
+  margin-bottom: 20px;
+}
+
+.input-section h2:hover {
+  color: #667eea;
 }
 
 .input-group {
@@ -208,6 +282,18 @@ h3 {
   padding: 25px;
   background: #f8f9fa;
   border-radius: 12px;
+}
+
+.distribute-section h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: color 0.2s;
+  margin-bottom: 20px;
+}
+
+.distribute-section h2:hover {
+  color: #667eea;
 }
 
 .config-section {
@@ -621,4 +707,374 @@ h3 {
   .distribute-controls label {
     justify-content: space-between;
   }
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.tab-btn {
+  padding: 12px 30px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.tab-btn:hover {
+  color: #667eea;
+}
+
+.tab-btn.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
+}
+
+/* Battle Mode */
+.battle-mode {
+  min-height: 500px;
+  padding: 40px;
+}
+
+.battle-config {
+  background: #f8f9fa;
+  padding: 25px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+}
+
+.config-row {
+  margin-bottom: 20px;
+}
+
+.config-row:last-child {
+  margin-bottom: 0;
+}
+
+.config-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.config-item label {
+  font-weight: 600;
+  color: #555;
+  min-width: 100px;
+}
+
+.team-size-input {
+  width: 80px;
+  padding: 8px 12px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.team-size-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.config-hint {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.config-label {
+  display: block;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 12px;
+}
+
+.challenges-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.challenge-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  background: white;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.challenge-checkbox-label:hover {
+  border-color: #667eea;
+  background: #f8f9ff;
+}
+
+.challenge-checkbox-label input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.challenge-text {
+  font-size: 1rem;
+  color: #333;
+  font-weight: 500;
+  direction: rtl;
+}
+
+.challenge-checkbox-label input[type="checkbox"]:checked + .challenge-text {
+  color: #667eea;
+  font-weight: 600;
+}
+
+.battle-controls {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.btn-randomize {
+  font-size: 1.5rem;
+  padding: 20px 50px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.btn-randomize:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+}
+
+.btn-randomize:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.battle-arena {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  padding: 40px;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  border-radius: 20px;
+  min-height: 300px;
+  position: relative;
+  overflow: hidden;
+}
+
+.battle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
+  gap: 20px;
+}
+
+.battle-arena::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.03) 0px,
+      rgba(255, 255, 255, 0.03) 1px,
+      transparent 1px,
+      transparent 40px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.03) 0px,
+      rgba(255, 255, 255, 0.03) 1px,
+      transparent 1px,
+      transparent 40px
+    );
+  pointer-events: none;
+}
+
+.battle-team {
+  flex: 1;
+  text-align: center;
+  opacity: 0;
+  transform: scale(0.5) translateY(-50px);
+  transition: all 0.5s ease-out;
+}
+
+.battle-team.show {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  animation: playerEnter 0.5s ease-out;
+}
+
+@keyframes playerEnter {
+  0% {
+    transform: scale(0.3) translateY(-100px) rotate(-10deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1) translateY(10px) rotate(2deg);
+  }
+  100% {
+    transform: scale(1) translateY(0) rotate(0);
+    opacity: 1;
+  }
+}
+
+.player-name {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 
+    0 0 10px rgba(255, 255, 255, 0.8),
+    0 0 20px rgba(102, 126, 234, 0.6),
+    0 0 30px rgba(102, 126, 234, 0.4),
+    3px 3px 5px rgba(0, 0, 0, 0.5);
+  margin-bottom: 15px;
+  direction: rtl;
+}
+
+.battle-team .age-badge {
+  font-size: 1rem;
+  padding: 8px 20px;
+  display: inline-block;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.team-members {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.team-label {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #ffd700;
+  text-shadow: 
+    0 0 10px rgba(255, 215, 0, 0.8),
+    2px 2px 4px rgba(0, 0, 0, 0.5);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.team-member {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 12px 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.team-member .member-name {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 
+    0 0 5px rgba(255, 255, 255, 0.6),
+    2px 2px 3px rgba(0, 0, 0, 0.5);
+  direction: rtl;
+  flex: 1;
+}
+
+.team-member .age-badge {
+  font-size: 0.85rem;
+  padding: 6px 12px;
+}
+
+.battle-vs {
+  font-size: 4rem;
+  font-weight: bold;
+  color: #ff4444;
+  text-shadow: 
+    0 0 20px rgba(255, 68, 68, 0.8),
+    0 0 40px rgba(255, 68, 68, 0.6),
+    0 0 60px rgba(255, 68, 68, 0.4),
+    5px 5px 10px rgba(0, 0, 0, 0.7);
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.3s ease-out;
+  z-index: 10;
+  position: relative;
+}
+
+.battle-vs.show {
+  opacity: 1;
+  transform: scale(1);
+  animation: vsEnter 0.4s ease-out;
+}
+
+@keyframes vsEnter {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.5) rotate(180deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(360deg);
+    opacity: 1;
+  }
+}
+
+.battle-challenge {
+  text-align: center;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 20px 40px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  animation: challengeEnter 0.5s ease-out;
+  margin-top: 20px;
+}
+
+@keyframes challengeEnter {
+  0% {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.challenge-label {
+  font-size: 0.9rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 5px;
+}
+
+.challenge-name {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #667eea;
+  direction: rtl;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }

@@ -29,6 +29,34 @@ const App: React.FC = () => {
   const [csvInput, setCsvInput] = useState<string>('');
   const [csvError, setCsvError] = useState<string>('');
   const [groupLayout, setGroupLayout] = useState<'grid' | 'stacked'>('grid');
+  const [configExpanded, setConfigExpanded] = useState<boolean>(true);
+  const [addPeopleExpanded, setAddPeopleExpanded] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<'distribution' | 'battle'>('distribution');
+  
+  // Password Protection
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [passwordInput, setPasswordInput] = useState<string>('');
+  const [passwordError, setPasswordError] = useState<string>('');
+  const correctPassword = '16112025';
+  
+  // Battle Mode States
+  const [player1, setPlayer1] = useState<Person | null>(null);
+  const [player2, setPlayer2] = useState<Person | null>(null);
+  const [challenge, setChallenge] = useState<string>('');
+  const [isAnimating, setIsAnimating] = useState<boolean>(false);
+  const [battleTeamSize, setBattleTeamSize] = useState<number>(1);
+  const [battleAgeGroups, setBattleAgeGroups] = useState<AgeGroup[]>(['child', 'yong child', 'yong adult', 'adult', 'senior', 'infant']);
+  const [team1, setTeam1] = useState<Person[]>([]);
+  const [team2, setTeam2] = useState<Person[]>([]);
+  
+  const allChallenges = [
+    'شد الحبل',
+    'سباق',
+    'سؤال رياضيات',
+    'سؤال معلومات عامة'
+  ];
+  
+  const [selectedChallenges, setSelectedChallenges] = useState<string[]>([...allChallenges]);
   
   // Distribution Configuration
   const [config, setConfig] = useState<DistributionConfig>({
@@ -42,6 +70,7 @@ const App: React.FC = () => {
 
   // Load people from JSON on component mount
   useEffect(() => {
+    console.log('useEffect: Loading people data');
     const loadedPeople: Person[] = peopleData.map((person: any) => ({
       id: person.sequence,
       name: person.name,
@@ -51,6 +80,12 @@ const App: React.FC = () => {
       relativeId: person.relativeId,
       sequence: person.sequence
     }));
+    console.log('useEffect: Loaded people count:', loadedPeople.length);
+    const uniqueIds = new Set(loadedPeople.map(p => p.id));
+    console.log('useEffect: Unique IDs:', uniqueIds.size);
+    if (uniqueIds.size !== loadedPeople.length) {
+      console.error('WARNING: Duplicate IDs found in loaded data!');
+    }
     setPeople(loadedPeople);
   }, []);
 
@@ -110,6 +145,13 @@ const App: React.FC = () => {
     // Track which people have been assigned
     const assigned = new Set<number>();
     
+    console.log('=== Distribution Started ===');
+    console.log('Total people:', people.length);
+    console.log('Unique people IDs:', new Set(people.map(p => p.id)).size);
+    console.log('Filtered people:', filteredPeople.length);
+    console.log('Selected age groups:', selectedAgeGroups);
+    console.log('Unique selected age groups:', new Set(selectedAgeGroups).size);
+    
     // Separate people by age group
     const byAgeGroup: Record<AgeGroup, Person[]> = {
       child: [],
@@ -123,6 +165,9 @@ const App: React.FC = () => {
     filteredPeople.forEach((person: Person) => {
       byAgeGroup[person.ageGroup].push(person);
     });
+    
+    console.log('byAgeGroup sizes:', Object.entries(byAgeGroup).map(([ag, arr]) => `${ag}: ${arr.length}`).join(', '));
+    console.log('Total in byAgeGroup:', Object.values(byAgeGroup).flat().length);
 
     // If separating spouses, handle married adults/seniors first
     if (separateSpouses && numGroups >= 2) {
@@ -135,7 +180,7 @@ const App: React.FC = () => {
 
         const spouse = findSpouse(person, filteredPeople);
         
-        if (spouse && filteredPeople.find(p => p.id === spouse.id)) {
+        if (spouse && !assigned.has(spouse.id)) {
           // Find group with least people of this age type
           let minGroupIndex = 0;
           let minCount = groups[0].filter(p => p.ageGroup === person.ageGroup).length;
@@ -187,6 +232,31 @@ const App: React.FC = () => {
         assigned.add(person.id);
       });
     });
+    
+    console.log('=== Distribution Complete ===');
+    console.log('Total assigned:', assigned.size);
+    console.log('Group sizes:', groups.map(g => g.length));
+    const allDistributed = groups.flat();
+    console.log('Total in groups:', allDistributed.length);
+    const uniqueIdsInGroups = new Set(allDistributed.map(p => p.id));
+    console.log('Unique in groups:', uniqueIdsInGroups.size);
+    
+    // Check for duplicates
+    if (uniqueIdsInGroups.size !== allDistributed.length) {
+      console.error('⚠️ DUPLICATES DETECTED!');
+      const idCounts: Record<number, number> = {};
+      allDistributed.forEach(p => {
+        idCounts[p.id] = (idCounts[p.id] || 0) + 1;
+      });
+      Object.entries(idCounts).forEach(([id, count]) => {
+        if (count > 1) {
+          const person = people.find(p => p.id === parseInt(id));
+          console.error(`  ID ${id} (${person?.name}) appears ${count} times`);
+        }
+      });
+    } else {
+      console.log('✅ No duplicates - each person appears exactly once');
+    }
 
     // Sort each group by age priority: seniors -> adults -> yong adults -> children -> yong children -> infants
     const agePriority: Record<AgeGroup, number> = {
@@ -208,6 +278,83 @@ const App: React.FC = () => {
   const clearAll = (): void => {
     setPeople([]);
     setDistributedGroups([]);
+  };
+
+  const randomizeBattle = (): void => {
+    // Filter people by selected age groups
+    const filteredPeople = people.filter(p => battleAgeGroups.includes(p.ageGroup));
+    
+    if (filteredPeople.length < battleTeamSize * 2) return;
+    
+    // Reset everything first to restart animation
+    setPlayer1(null);
+    setPlayer2(null);
+    setTeam1([]);
+    setTeam2([]);
+    setChallenge('');
+    setIsAnimating(true);
+    
+    // Random selection
+    const shuffled = [...filteredPeople].sort(() => Math.random() - 0.5);
+    const selectedTeam1 = shuffled.slice(0, battleTeamSize);
+    const selectedTeam2 = shuffled.slice(battleTeamSize, battleTeamSize * 2);
+    const randomChallenge = selectedChallenges[Math.floor(Math.random() * selectedChallenges.length)];
+    
+    // For backward compatibility, set player1 and player2 for single-player mode
+    if (battleTeamSize === 1) {
+      setTimeout(() => {
+        setPlayer1(selectedTeam1[0]);
+      }, 300);
+      
+      setTimeout(() => {
+        setPlayer2(selectedTeam2[0]);
+      }, 600);
+    } else {
+      // Team mode
+      setTimeout(() => {
+        setTeam1(selectedTeam1);
+      }, 300);
+      
+      setTimeout(() => {
+        setTeam2(selectedTeam2);
+      }, 600);
+    }
+    
+    setTimeout(() => {
+      setChallenge(randomChallenge);
+      setIsAnimating(false);
+    }, 1200);
+  };
+
+  const toggleBattleAgeGroup = (ag: AgeGroup): void => {
+    const isSelected = battleAgeGroups.includes(ag);
+    if (isSelected) {
+      if (battleAgeGroups.length === 1) return; // Keep at least one
+      setBattleAgeGroups(battleAgeGroups.filter(group => group !== ag));
+    } else {
+      setBattleAgeGroups([...battleAgeGroups, ag]);
+    }
+  };
+
+  const toggleChallenge = (challengeName: string): void => {
+    const isSelected = selectedChallenges.includes(challengeName);
+    if (isSelected) {
+      if (selectedChallenges.length === 1) return; // Keep at least one
+      setSelectedChallenges(selectedChallenges.filter(c => c !== challengeName));
+    } else {
+      setSelectedChallenges([...selectedChallenges, challengeName]);
+    }
+  };
+
+  const handlePasswordSubmit = (e: React.FormEvent): void => {
+    e.preventDefault();
+    if (passwordInput === correctPassword) {
+      setIsAuthenticated(true);
+      setPasswordError('');
+    } else {
+      setPasswordError('Incorrect password. Please try again.');
+      setPasswordInput('');
+    }
   };
 
   const loadDefaultData = (): void => {
@@ -321,14 +468,66 @@ const App: React.FC = () => {
     return ageGroup.charAt(0).toUpperCase() + ageGroup.slice(1);
   };
 
+  // Show password screen if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="App">
+        <div className="container">
+          <div className="password-screen">
+            <h1>🔒 Group Distributor</h1>
+            <p className="subtitle">Please enter the password to access the system</p>
+            <form onSubmit={handlePasswordSubmit} className="password-form">
+              <input
+                type="password"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                placeholder="Enter password"
+                className="password-input"
+                autoFocus
+              />
+              <button type="submit" className="btn btn-login">
+                Login
+              </button>
+            </form>
+            {passwordError && <div className="password-error">{passwordError}</div>}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="App">
       <div className="container">
         <h1>Group Distributor</h1>
         <p className="subtitle">Evenly distribute people across groups</p>
 
+        <div className="tabs">
+          <button 
+            className={`tab-btn ${activeTab === 'distribution' ? 'active' : ''}`}
+            onClick={() => setActiveTab('distribution')}
+          >
+            Distribution Mode
+          </button>
+          <button 
+            className={`tab-btn ${activeTab === 'battle' ? 'active' : ''}`}
+            onClick={() => setActiveTab('battle')}
+          >
+            Battle Mode ⚔️
+          </button>
+        </div>
+
+        {activeTab === 'distribution' && (
+        <>
         <div className="input-section">
-          <h2>Add People</h2>
+          <h2 
+            onClick={() => setAddPeopleExpanded(!addPeopleExpanded)}
+            style={{ cursor: 'pointer', userSelect: 'none' }}
+          >
+            {addPeopleExpanded ? '▼' : '▶'} Add People
+          </h2>
+          {addPeopleExpanded && (
+          <>
           <div className="input-group">
             <input
               type="text"
@@ -390,12 +589,21 @@ const App: React.FC = () => {
               </div>
             </div>
           )}
+          </>
+          )}
         </div>
 
         {people.length > 0 && (
           <div className="distribute-section">
-            <h2>Distribution Configuration</h2>
+            <h2 
+              onClick={() => setConfigExpanded(!configExpanded)}
+              style={{ cursor: 'pointer', userSelect: 'none' }}
+            >
+              {configExpanded ? '▼' : '▶'} Distribution Configuration
+            </h2>
             
+            {configExpanded && (
+            <>
             <div className="config-section">
               <h3>1. Select Age Groups to Include</h3>
               <div className="age-group-checkboxes">
@@ -465,6 +673,8 @@ const App: React.FC = () => {
                 </button>
               </div>
             </div>
+            </>
+            )}
           </div>
         )}
 
@@ -529,6 +739,143 @@ const App: React.FC = () => {
                 );
               })}
             </div>
+          </div>
+        )}
+        </>
+        )}
+
+        {activeTab === 'battle' && (
+          <div className="battle-mode">
+            <div className="battle-config">
+              <div className="config-row">
+                <div className="config-item">
+                  <label>Team Size:</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={battleTeamSize}
+                    onChange={(e) => setBattleTeamSize(parseInt(e.target.value) || 1)}
+                    className="team-size-input"
+                  />
+                  <span className="config-hint">members per team</span>
+                </div>
+              </div>
+
+              <div className="config-row">
+                <label className="config-label">Select Age Groups:</label>
+                <div className="age-group-checkboxes">
+                  {ageGroups.map(ag => (
+                    <label key={ag} className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={battleAgeGroups.includes(ag)}
+                        onChange={() => toggleBattleAgeGroup(ag)}
+                      />
+                      <span className={`age-badge ${ag}`}>
+                        {capitalizeAgeGroup(ag)}
+                      </span>
+                      <span className="count">
+                        ({people.filter(p => p.ageGroup === ag).length})
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="config-row">
+                <label className="config-label">Select Challenges:</label>
+                <div className="challenges-checkboxes">
+                  {allChallenges.map(ch => (
+                    <label key={ch} className="challenge-checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={selectedChallenges.includes(ch)}
+                        onChange={() => toggleChallenge(ch)}
+                      />
+                      <span className="challenge-text">{ch}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="battle-controls">
+              <button 
+                onClick={randomizeBattle} 
+                className="btn btn-randomize"
+                disabled={
+                  people.filter(p => battleAgeGroups.includes(p.ageGroup)).length < battleTeamSize * 2 || 
+                  isAnimating || 
+                  selectedChallenges.length === 0
+                }
+              >
+                🎲 Randomize Battle
+              </button>
+            </div>
+
+            {(player1 || player2 || team1.length > 0 || team2.length > 0 || challenge) && (
+              <div className="battle-arena">
+                <div className="battle-row">
+                  <div className={`battle-team ${player1 || team1.length > 0 ? 'show' : ''}`}>
+                    {player1 ? (
+                      <>
+                        <div className="player-name">{player1.name}</div>
+                        <div className={`age-badge ${player1.ageGroup}`}>
+                          {capitalizeAgeGroup(player1.ageGroup)}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="team-members">
+                        <div className="team-label">Team 1</div>
+                        {team1.map((member, idx) => (
+                          <div key={member.id} className="team-member">
+                            <span className="member-name">{member.name}</span>
+                            <span className={`age-badge ${member.ageGroup}`}>
+                              {capitalizeAgeGroup(member.ageGroup)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className={`battle-vs ${challenge ? 'show' : ''}`}>
+                    VS
+                  </div>
+
+                  <div className={`battle-team ${player2 || team2.length > 0 ? 'show' : ''}`}>
+                    {player2 ? (
+                      <>
+                        <div className="player-name">{player2.name}</div>
+                        <div className={`age-badge ${player2.ageGroup}`}>
+                          {capitalizeAgeGroup(player2.ageGroup)}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="team-members">
+                        <div className="team-label">Team 2</div>
+                        {team2.map((member, idx) => (
+                          <div key={member.id} className="team-member">
+                            <span className="member-name">{member.name}</span>
+                            <span className={`age-badge ${member.ageGroup}`}>
+                              {capitalizeAgeGroup(member.ageGroup)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {challenge && (
+                  <div className="battle-challenge">
+                    <div className="challenge-label">التحدي</div>
+                    <div className="challenge-name">{challenge}</div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
